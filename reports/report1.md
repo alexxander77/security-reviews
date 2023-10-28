@@ -665,13 +665,48 @@ Restaking will not work as expected. People using BoostAggregator will have to u
 ### Recommendation
 pass false as an argument in #L342
 
-## 7. <a id="my-section7"></a>
+## 7. <a id="my-section7"></a> BoostAggregator loss of funds for low-value rewards
 ### Severity
+Medium
 ### Impact
+Permanent loss of rewards
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L118)
 ### Description
-### Recommendation
+When calling `unstakeAndWithdraw`, there is an unnecessary check of `pendingRewards > DIVISIONER`. If `pendingRewards < DIVISIONER`, the rewards are not distributed, neither to the staker, nor the BoostAggregator. In fact, they stay within the BoostAggregator but are forever stuck and no one can claim them.
+This would especially be a problem when a user has numerous low-value NFTs/ has staked multiple NFTs for very little time.
+```solidity
+    function unstakeAndWithdraw(uint256 tokenId) external {
+        address user = tokenIdToUser[tokenId];
+        if (user != msg.sender) revert NotTokenIdOwner();
 
+        // unstake NFT from Uniswap V3 Staker
+        uniswapV3Staker.unstakeToken(tokenId);
+
+        uint256 pendingRewards = uniswapV3Staker.tokenIdRewards(tokenId) - tokenIdRewards[tokenId];
+
+        if (pendingRewards > DIVISIONER) {     // @audit - unnecessary check leading to loss of funds
+            uint256 newProtocolRewards = (pendingRewards * protocolFee) / DIVISIONER;
+            /// @dev protocol rewards stay in stake contract
+            protocolRewards += newProtocolRewards;
+            pendingRewards -= newProtocolRewards;
+
+            address rewardsDepot = userToRewardsDepot[user];
+            if (rewardsDepot != address(0)) {
+                // claim rewards to user's rewardsDepot
+                uniswapV3Staker.claimReward(rewardsDepot, pendingRewards);
+            } else {
+                // claim rewards to user
+                uniswapV3Staker.claimReward(user, pendingRewards);
+            }
+        }
+
+        // withdraw rewards from Uniswap V3 Staker
+        uniswapV3Staker.withdrawToken(tokenId, user, "");
+    }
+```
+### Recommendation
+Still distribute the rewards, even if they're `< DIVISIONER`
 ## 8. <a id="my-section8"></a>
 ### Severity
 ### Impact
