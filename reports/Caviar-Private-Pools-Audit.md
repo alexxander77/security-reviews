@@ -610,7 +610,7 @@ Medium
 ### Impact
 Well-known issue regarding non-standard ERC20 tokens such as USDT that don't implement the EIP20 interface correct because of missing return boolean variables on methods like `transfer()`, `transferFrom()` and `approve()`.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/Factory.sol#L115)
+[code snippet](https://github.com/code-423n4/2023-04-caviar/blob/main/src/Factory.sol#L115)
 ### Description
 Creating a PrivatePool with a token like USDT will revert because of the following line:
 ```solidity
@@ -629,6 +629,7 @@ Medium
 Users that submit single or bulk `Buy` orders through `EthRouter.sol` can have their excess `eth` stolen by a malicious royalty recipient
 ### Vulnerable Code
 [code snippet 1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L268)
+
 [code snippet 2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/EthRouter.sol#L140-L143)
 ### Description
 The `buy(...)` function in `PrivatePool.sol` refunds excess ether back to EthRouter.sol and then pays a royalty amount to a royalty recipient. The order is the following:
