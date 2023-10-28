@@ -73,6 +73,21 @@ The attack vector is inline with the general encoding scheme displayed below, th
 | 1 byte | 20 bytes | 1 byte |   4 bytes    |       32 bytes * 257      |    32 bytes * 257   |    32 bytes * 257    |     32 bytes * 257    | 3 bytes | any  | 32 bytes |
 +--------+----------+--------+--------------+---------------------------+---------------------+----------------------+-----------------------+---------+------+----------+
 ```
+### Supplying the exploit vector
+The entry point for a message on the Root Chain is `anyExecute(bytes calldata data)` in `RootBridgeAgent.sol` - this will be called by Multichain’s AnycallExecutor. The function will unpack and navigate the supplied flag 0x06 - corresponding to `callOutSignedAndBridgeMultiple(...)` that was invoked on the Branch Chain.
+
+Next `executeSignedWithDepositMultiple(...)` will be invoked residing in `RootBridgeAgentExecutor.sol`, which will subsequently call `_bridgeInMultiple(...)`, however, the amount of data passed to `_bridgeInMultiple(...)` depends on the packed length of the hTokens array.
+
+Now `_bridgeInMultiple(...)` will unpack the `_dParams` where `numOfAssets = 1`, hence only 1 iteration, and will populate a set with in reality the first 4 entries of the supplied hTokens[] in the attack vector -
+
+`hTokens[0] = hToken address`,
+
+`tokens[0] = token address`,
+
+`amounts[0] = malicious address payload cast to uint256`,
+
+`deposits[0] = malicious address payload cast to uint256`.
+
 **Impact**
 
 **Recommendation** 
