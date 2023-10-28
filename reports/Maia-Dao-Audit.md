@@ -8,11 +8,11 @@ The auditing team is known as Voyvoda and includes 3 Blockchain Security Experts
 * gogotheauditor | twitter: https://twitter.com/gogotheauditor
   
 # About Maia Dao
-Maia Dao is a DeFi Ecosystem consisting of 4 main projects - Maia, Hermes, Talo & Ulyses.
+Maia Dao is a DeFi Ecosystem consisting of 4 main projects - Maia, Hermes, Talo & Ulysses.
  
-The audit primaraly focused on veryfiying and securing - 
+The audit primarily focused on verifying and securing - 
 * Hermes - a governance & rewards distribution system.
-* Ulyses - an omnichain & virtual liquidity system.
+* Ulysses - an omnichain & virtual liquidity system.
 
 # Findings List
 | # | Issue Title                                                             | Severity | Status       |
