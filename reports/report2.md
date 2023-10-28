@@ -500,13 +500,27 @@ contract MaliciousRoyaltyReceiverDrainPrivatePoolTest is Fixture {
 ```
 ### Recommendation
 Ensure that the amount sent to the NFT royalty receivers in the second for loop in `buy()` is the same as the amount calculated in the first for loop.
-## <a id="my-section2"></a> 2.
-### Severity
-### Impact
-### Vulnerable Code
-### Description
-### Recommendation
 
+## <a id="my-section2"></a> 2.PrivatePool owner can steal tokens approved to the pair
+### Severity
+High
+### Impact
+User's balance of base tokens can be stolen via the well known "max approve" vulnerability or by front-running approvals.
+### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L454-L476)
+### Description
+The pair contract can be used directly to execute `buy()` operations. In order to buy an NFT from a PrivatePool that has an ERC20 base token, users have to approve the PrivatePool to spend these tokens.
+
+A well known problem is when users decide to approve a given contract to spend all their assets or forget to reset approvals after a transfer that did not transfer the whole approved amount of tokens. This can be exploited by the owner of the PrivatePool in several ways:
+
+* Using the execute function at any point in time, the owner of the private pool can steal any tokens that belong to accounts that have used to approve some amount of base token to this contract. The owner is heavily incentivised in this case as the amount to steal can be really big.
+
+* Front-running a call to the `.buy` function (and back-running the `baseToken.approve` call) executing the same operation mentioned in 1. using the execute function. Again the owner of the private pool is incentivised if the approved quantity is big (e.g. `type(uint256).max`) and the balance of base tokens of the `msg.sender` is also big enough.
+
+* Front-running a call to the .buy function (and back-running the `baseToken.approve` call) by calling `setVirtualReserves` or `setMerkleRoot` setting the parameters in such a way that will highly inflate the `netInputAmount`.
+
+### Recommendation
+Using a Timelock could solve the listed problems.
 ## <a id="my-section3"></a> 3.
 ### Severity
 ### Impact
