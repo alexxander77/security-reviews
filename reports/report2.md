@@ -601,12 +601,23 @@ OpenZeppelin's implementation of ERC2981 shows how there can be different royalt
 ### Recommendation
 Include the weight of the NFT when calculating the sale price. Do not assume that the royalty receiver for each NFT will be the same.
 
-## <a id="my-section5"></a> 5.
+## <a id="my-section5"></a> 5. Non-standard ERC20 tokens such as USDT are not supported
 ### Severity
+Medium
 ### Impact
+Well-known issue regarding non-standard ERC20 tokens such as USDT that don't implement the EIP20 interface correct because of missing return boolean variables on methods like `transfer()`, `transferFrom()` and `approve()`.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/Factory.sol#L115)
 ### Description
+Creating a PrivatePool with a token like USDT will revert because of the following line:
+```solidity
+115:      ERC20(_baseToken).transferFrom(msg.sender, address(privatePool), baseTokenAmount);
+```
+Since USDT does not return a boolean when `.transferFrom` is called, but the ERC20 interface used defines that there will be a boolean returned, the compiler will check whether the `returndatasize()` is 32 bytes (one word size) and revert if this is not true.
+
+The same issue occures on all other places where `.transferFrom` and `.transfer` are used instead of the corresponding methods from `SafeTransferLib`. But since this issue appears in the Factory contract and stops the anyone from creating a PrivatePool with such base token there are no funds at risk, but a core functionallity of the project is affected when the most popular stablecoin is used.
 ### Recommendation
+Use OpenZeppelin's SafeTransferLib methods instead of the standard IERC20 interface for executing transfers.
 
 ## <a id="my-section6"></a> 6.
 ### Severity
