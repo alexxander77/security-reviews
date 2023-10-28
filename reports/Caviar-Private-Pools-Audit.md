@@ -8,9 +8,9 @@ The auditing team is known as Voyvoda and includes 3 Blockchain Security Experts
 * gogotheauditor | twitter: https://twitter.com/gogotheauditor
   
 # About Caviar Private Pools
-Caviar Private Pools are highly customizable NFT AMM pool implementing concentrated liquidity.
+Caviar Private Pools are highly customizable NFT AMM pools implementing concentrated liquidity.
  
-The audit focused on veryfiying and securing all of the contracts in the system. 
+The audit focused on verifying and securing all of the contracts in the system. 
 
 # Findings List
 | # | Issue Title                                                                                | Severity | Status |
