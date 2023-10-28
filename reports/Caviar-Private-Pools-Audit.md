@@ -31,9 +31,11 @@ High
 ### Impact
 Royalty fee calculation has a serious flaw in `buy(...)`. Caviar's private pools could be completely drained.
 ### Vulnerable Code
-[line1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L237-L252)
-[line2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L267-L268)
-[line3](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L274)
+[code snippet 1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L237-L252)
+
+[code snippet 2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L267-L268)
+
+[code snippet 3](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L274)
 ### Description
 In the Caviar private pool, NFT royalties are being paid from the msg.sender to the NFT royalty receiver of each token in `PrivatePool.buy()` and `PrivatePool.sell()`.
 
@@ -507,7 +509,7 @@ High
 ### Impact
 User's balance of base tokens can be stolen via the well known "max approve" vulnerability or by front-running approvals.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L454-L476)
+[code snippet](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L454-L476)
 ### Description
 The pair contract can be used directly to execute `buy()` operations. In order to buy an NFT from a PrivatePool that has an ERC20 base token, users have to approve the PrivatePool to spend these tokens.
 
@@ -528,7 +530,7 @@ Medium
 ### Impact
 Incorrect protocol fee is taken when changing NFTs which results in profit loss for the Caviar protocol.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L737)
+[code snippet](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L737)
 ### Description
 The protocol fee in `changeFeeQuote` is calculated as a percentage of the `feeAmount` which is based on the input amount:
 ```solidity
@@ -558,8 +560,9 @@ Medium
 ### Impact
 Royalty receivers of NFTs with different weight/prices will receive incorrect royalty fee amount.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L235-L236)
-[link2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L334-L335)
+[code snippet 1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L235-L236)
+
+[code snippet 2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L334-L335)
 ### Description
 Incorrect assumption is made that the royalty receiver of each NFT that is being sold/bought will be the same and therefore the sale price of each NFT could be calculated as the average of all.
 ```solidity
@@ -625,8 +628,8 @@ Medium
 ### Impact
 Users that submit single or bulk `Buy` orders through `EthRouter.sol` can have their excess `eth` stolen by a malicious royalty recipient
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L268)
-[link2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/EthRouter.sol#L140-L143)
+[code snippet 1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L268)
+[code snippet 2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/EthRouter.sol#L140-L143)
 ### Description
 The `buy(...)` function in `PrivatePool.sol` refunds excess ether back to EthRouter.sol and then pays a royalty amount to a royalty recipient. The order is the following:
 ```solidity
@@ -1036,7 +1039,7 @@ Medium
 ### Impact
 A user that submits a `change(...)` with more than 1 `Change` order will revert.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-04-caviar/blob/cd8a92667bcb6657f70657183769c244d04c015c/src/EthRouter.sol#L254-L293)
+[code snippet](https://github.com/code-423n4/2023-04-caviar/blob/cd8a92667bcb6657f70657183769c244d04c015c/src/EthRouter.sol#L254-L293)
 ### Description
 `change(...)` in EthRouter.sol calls `change(...)` in the Private Pool in the following code block:
 ```solidity
