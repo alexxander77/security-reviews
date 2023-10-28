@@ -552,12 +552,54 @@ This makes the protocol fee extremely low meaning a profit loss for the protocol
 ### Recommendation
 `protocolFeeAmount` in `changeFeeQuote` should be a percentage of the input amount instead of the pool fee.
 
-## <a id="my-section4"></a> 4.
+## <a id="my-section4"></a> 4. Incorrect NFT sale price calculation
 ### Severity
+Medium
 ### Impact
+Royalty receivers of NFTs with different weight/prices will receive incorrect royalty fee amount.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L235-L236)
+[link2](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L334-L335)
 ### Description
+Incorrect assumption is made that the royalty receiver of each NFT that is being sold/bought will be the same and therefore the sale price of each NFT could be calculated as the average of all.
+```solidity
+235:    // calculate the sale price (assume it's the same for each NFT even if weights differ)
+236:    uint256 salePrice = (netInputAmount - feeAmount - protocolFeeAmount) / tokenIds.length;
+```
+
+```solidity
+334:    // calculate the sale price (assume it's the same for each NFT even if weights differ)
+335:    uint256 salePrice = (netOutputAmount + feeAmount + protocolFeeAmount) / tokenIds.length;
+```
+This is incorrect since the `salePrice` is used to calculate the royalty fee that will be paid to each different royalty receiver for each specific NFT in `buy()` and `sell()`:
+```solidity
+272:    for (uint256 i = 0; i < tokenIds.length; i++) {
+273:        // get the royalty fee for the NFT
+274:        (uint256 royaltyFee, address recipient) = _getRoyalty(tokenIds[i], salePrice);
+```
+```solidity
+338:    (uint256 royaltyFee, address recipient) = _getRoyalty(tokenIds[i], salePrice);
+```
+Therefore if 2 NFTs are bought, NFT#1 has a weight of 10e18, NFT#2 has a weight of 100e18 and the msg.sender is paying 110 ETH for these two NFTs, the salePrice will be calculated as 55 ETH for each NFT (ignoring fees) and therefore the royalty fee will be 5.5 ETH for each NFT (if the royalty fee is 10%) while it should be 1 ETH for NFT#1 and 10 ETH for NFT#2.
+```solidity
+        /**
+         * @dev Sets the royalty information for a specific token id, overriding the global default.
+         *
+         * Requirements:
+         *
+         * - `receiver` cannot be the zero address.
+         * - `feeNumerator` cannot be greater than the fee denominator.
+         */
+        function _setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) internal virtual {
+            require(feeNumerator <= _feeDenominator(), "ERC2981: royalty fee will exceed salePrice");
+            require(receiver != address(0), "ERC2981: Invalid parameters");
+
+            _tokenRoyaltyInfo[tokenId] = RoyaltyInfo(receiver, feeNumerator);
+        }
+```
+OpenZeppelin's implementation of ERC2981 shows how there can be different royalty receiver and fee for each specific token Id:
 ### Recommendation
+Include the weight of the NFT when calculating the sale price. Do not assume that the royalty receiver for each NFT will be the same.
 
 ## <a id="my-section5"></a> 5.
 ### Severity
