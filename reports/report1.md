@@ -17,7 +17,7 @@ The audit primaraly focused on veryfiying and securing -
 # Findings List
 | # | Issue Title                                                             | Severity | Status       |
 | ------ | ----------------------------------------------------------------- | -------- | ------------ |
-| 1 | Attacker can mint arbitrary amount of `hToken` on RootChain                                                                                     | Critical | Fixed |
+| [1](#my-section) | Attacker can mint arbitrary amount of `hToken` on RootChain                                                                         | Critical | Fixed |
 | 2 | Re-adding a deprecated gauge in a new epoch before calling `updatePeriod()` / `queueRewardsForCycle()` will leave some gauges without rewards.  | Critical | Fixed |
 | 3 | Attacker can steal Accumulated Awards from RootBridgeAgent by abusing `retrySettlement()`                                                       | High     | Fixed |
 | 4 | `sweep()` doesn’t convert WETH to ETH                                                                                                           | High     | Fixed |
@@ -31,7 +31,7 @@ The audit primaraly focused on veryfiying and securing -
 
 # Detailed Explanation
 
-## 1. Attacker can mint arbitrary amount of `hToken` on RootChain
+## <a id="my-section"></a> 1. Attacker can mint arbitrary amount of `hToken` on RootChain
 
 ### Severity
 Critical
