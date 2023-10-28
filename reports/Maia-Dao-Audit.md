@@ -25,7 +25,7 @@ The audit primarily focused on verifying and securing -
 | [[6]](#my-section6) | UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument                                                 | Medium   | Fixed |
 | [[7]](#my-section7) | BoostAggregator loss of funds for low-value rewards                                                                           | Medium   | Fixed |
 | [[8]](#my-section8) | BoostAggregator owner can set fees to 100% and steal all of the users rewards                                                 | Medium   | Fixed |
-| [[9]](#my-section9) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                             | Low      | Fixed |
+| [[9]](#my-section9) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                               | Low      | Fixed |
 | [[10]](#my-section10) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
 
 # Detailed Explanation
