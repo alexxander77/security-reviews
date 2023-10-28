@@ -17,17 +17,17 @@ The audit primaraly focused on veryfiying and securing -
 # Findings List
 | # | Issue Title                                                             | Severity | Status       |
 | ------ | ----------------------------------------------------------------- | -------- | ------------ |
-| [1](#my-section) | Attacker can mint arbitrary amount of `hToken` on RootChain                                                                         | Critical | Fixed |
-| 2 | Re-adding a deprecated gauge in a new epoch before calling `updatePeriod()` / `queueRewardsForCycle()` will leave some gauges without rewards.  | Critical | Fixed |
-| 3 | Attacker can steal Accumulated Awards from RootBridgeAgent by abusing `retrySettlement()`                                                       | High     | Fixed |
-| 4 | `sweep()` doesn’t convert WETH to ETH                                                                                                           | High     | Fixed |
-| 5 | `retrySettlement()` should revert on a Settlement that has been redeemed or is non existing, crediting back ETH to user                         | Medium   | Fixed |
-| 6 | UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument                                                                   | Medium   | Fixed |
-| 7 | BoostAggregator loss of funds for low-value rewards                                                                                             | Medium   | Fixed |
-| 8 | BoostAggregator owner can set fees to 100% and steal all of the users' rewards                                                                  | Medium   | Fixed |
-| 9 | Deprecating a gauge before `queueRewardsForCycle()` in a new cycle leads to loss of rewards                                                     | Medium   | Acknowledged |
-| 10| Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                                                 | Low      | Fixed |
-| 11| Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                                                   | Low      | Acknowledged |
+| [[1]](#my-section1) | Attacker can mint arbitrary amount of `hToken` on RootChain                                                                   | Critical | Fixed |
+| [[2]](#my-section2) | Re-adding a deprecated gauge in a new epoch before calling `updatePeriod()` / `queueRewardsForCycle()` will leave some gauges without rewards.  | Critical | Fixed |
+| [[3]](#my-section3) | Attacker can steal Accumulated Awards from RootBridgeAgent by abusing `retrySettlement()`                                     | High     | Fixed |
+| [[4]](#my-section4) | `sweep()` doesn’t convert WETH to ETH                                                                                         | High     | Fixed |
+| [[5]](#my-section5) | `retrySettlement()` should revert on a Settlement that has been redeemed or is non existing, crediting back ETH to user       | Medium   | Fixed |
+| [[6]](#my-section6) | UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument                                                 | Medium   | Fixed |
+| [[7]](#my-section7) | BoostAggregator loss of funds for low-value rewards                                                                           | Medium   | Fixed |
+| [[8]](#my-section8) | BoostAggregator owner can set fees to 100% and steal all of the users' rewards                                                | Medium   | Fixed |
+| [[9]](#my-section9) | Deprecating a gauge before `queueRewardsForCycle()` in a new cycle leads to loss of rewards                                   | Medium   | Acknowledged |
+| [[10]](#my-section10) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                             | Low      | Fixed |
+| [[11]](#my-section11) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
 
 # Detailed Explanation
 
