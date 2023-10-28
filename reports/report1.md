@@ -583,7 +583,52 @@ function testGasIssue() public {
 ### Recommendation
 It is hard to conclude a particular fix but consider setting userFeeInfo.gasToBridgeOut = 0 after retrySettlement as part of the mitigation.
 
-## 4. <a id="my-section4"></a>
+## 4. <a id="my-section4"></a> `sweep()` doesn’t convert WETH to ETH
+### Severity
+High
+### Impact
+Dao is unable to withdraw `accumulatedFees`.
+### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L1259-L1264)
+### Description
+In RootBridgeAgent , `_payExecutionGas()` transfers funds for the gas used by `anyExecute(...)` as payment to Multichain, whatever is left is stored in `accumulatedFees`. The problem is that at that point the denomination is WETH - as we can see in `_replenishGas(...)` that’s converted to ETH and sent. However the `sweep()` implementation doesn’t convert WETH to ETH, therefore, there will be insufficient amount of ETH and `sweep()` will always revert.
+
+```solidity
+function sweep() external {
+        if (msg.sender != daoAddress) revert NotDao();
+        uint256 _accumulatedFees = accumulatedFees - 1;
+        accumulatedFees = 1;
+        SafeTransferLib.safeTransferETH(daoAddress, _accumulatedFees);
+    }
+```
+### Coded PoC
+Copy the function `testSweep()` in `test/ulysses-omnichain/RootTest.t.sol` .
+
+Execute with `forge test --match-test testSweep -vv`
+
+Result - `OutOfFund` revert
+```solidity
+function testSweep() public {
+
+        testAddLocalTokenArbitrum();
+        // Accumulate rewards in RootBridgeAgent
+        address some_user = address(0xAAEE);
+        hevm.deal(some_user, 1.5 ether);
+				// Not a valid flag, MulticallRouter will return false, that's fine, we just want to credit some fees
+        bytes memory empty_params = abi.encode(bytes1(0x00));
+        hevm.prank(some_user);
+        avaxMulticallBridgeAgent.callOut{value: 1.1 ether }(empty_params, 0);
+
+        // This will revert
+        hevm.prank(dao);
+        multicallBridgeAgent.sweep();
+
+    }
+```
+### Recommendation
+Convert WETH to ETH in `sweep()`.
+
+## 5. <a id="my-section5"></a>
 ### Severity
 ### Impact
 ### Vulnerable Code
