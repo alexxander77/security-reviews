@@ -39,11 +39,15 @@ Critical
 Adversary can construct an attack vector that let’s him mint arbitrary amount of hToken’s on the Root Chain.
 
 ### Vulnerable code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L275-L316) |
-[link2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L860-L1174) |
-[link3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgentExecutor.sol#L259-L299) |
-[link4](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L404-L426) |
-[link5](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootPort.sol#L276-L284) |
+[code snippet 1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L275-L316)
+
+[code snippet 2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L860-L1174)
+
+[code snippet 3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgentExecutor.sol#L259-L299)
+
+[code snippet 4](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L404-L426)
+
+[code snippet 5](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootPort.sol#L276-L284)
 
 ### Description
 The `callOutSignedAndBridgeMultiple(...)` function is supposed to bridge multiple tokens to a destination chain and also carry the msg.sender so that the tokens can be credited to msg.sender's VirtualAccount. An attacker can call the function with such `DepositMultipleInputParams _dParams` that take advantage of several weaknesses contained within the function.
@@ -224,9 +228,11 @@ Critical
 ### Impact
 One or more gauge will remain without rewards. Malicious user can DOS a selected gauge from receiving rewards.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/erc-20/ERC20Gauges.sol#L174-L181)
-[link2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/erc-20/ERC20Gauges.sol#L407-L422)
-[link3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/rewards/rewards/FlywheelGaugeRewards.sol#L72-L104)
+[code snippet 1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/erc-20/ERC20Gauges.sol#L174-L181)
+
+[code snippet 2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/erc-20/ERC20Gauges.sol#L407-L422)
+
+[code snippet 3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/rewards/rewards/FlywheelGaugeRewards.sol#L72-L104)
 ### Description
 When a gauge is deprecated its weight is subtracted from `totalWeight` , however, the weight of the gauge itself could remain different from 0 (it’s up to the users to remove their votes). That’s reflected in `_addGauge()`.
 ```solidity
@@ -397,13 +403,20 @@ High
 ### Impact
 Accumulated Awards inside `RootBridgeAgent.sol` can be stolen. Accumulated Awards state will be compromised and awards will be stuck.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L238-L272)
-[link2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L1018-L1054)
-[link3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L860-L1174)
-[link4](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L244-L252)
-[link5](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/VirtualAccount.sol#L41-L53)
-[link6](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L1177-L1216)
-[link7](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/MulticallRootRouter.sol#L345-L409)
+[code snippet 1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L238-L272)
+
+[code snippet 2](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/BranchBridgeAgent.sol#L1018-L1054)
+
+[code snippet 3](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L860-L1174)
+
+[code snippet 4](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L244-L252)
+
+[code snippet 5](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/VirtualAccount.sol#L41-L53)
+
+[code snippet 6](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L1177-L1216)
+
+[code snippet 7](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/MulticallRootRouter.sol#L345-L409)
+
 ### Description
 #### Gas state
 The gas related state inside RootBridgeAgent consists of
@@ -588,7 +601,7 @@ High
 ### Impact
 Dao is unable to withdraw `accumulatedFees`.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L1259-L1264)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L1259-L1264)
 ### Description
 In RootBridgeAgent , `_payExecutionGas()` transfers funds for the gas used by `anyExecute(...)` as payment to Multichain, whatever is left is stored in `accumulatedFees`. The problem is that at that point the denomination is WETH - as we can see in `_replenishGas(...)` that’s converted to ETH and sent. However the `sweep()` implementation doesn’t convert WETH to ETH, therefore, there will be insufficient amount of ETH and `sweep()` will always revert.
 
@@ -633,7 +646,7 @@ Medium
 ### Impact
 User’s ETH is not refunded and stuck in RootBridgeAgent.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L244-L252)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L244-L252)
 ### Description
 `retrySettlement(...)` is a payable function inside RootBridgeAgent that accepts ETH as payment for gas & re-trying execution of a Settlement. The following block of code highlights the check that is used to verify if the Settlement doesn’t exist or hasn’t been redeemed. The problem is that the function returns false rather to revert which means that a user that called `retrySettlement(...)` for redeemed or non-existent settlement won’t get their ETH back, moreover, the ETH is not accounted in `accumulatedRewards` and will be stuck in the contract.
 ### Recommendation
@@ -645,8 +658,9 @@ Medium
 ### Impact
 Restaking will not work as expected. People using BoostAggregator will have to unstake, withdraw, deposit again in order to restake their token.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L342)
-[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L374)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L342)
+
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L374)
 ### Description
 ```solidity
     function restakeToken(uint256 tokenId) external {
@@ -670,7 +684,7 @@ Medium
 ### Impact
 Permanent loss of rewards
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L118)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L118)
 ### Description
 When calling `unstakeAndWithdraw`, there is an unnecessary check of `pendingRewards > DIVISIONER`. If `pendingRewards < DIVISIONER`, the rewards are not distributed, neither to the staker, nor the BoostAggregator. In fact, they stay within the BoostAggregator but are forever stuck and no one can claim them.
 This would especially be a problem when a user has numerous low-value NFTs/ has staked multiple NFTs for very little time.
@@ -713,8 +727,9 @@ Medium
 ### Impact
 Users who use BoostAggregator will suffer 100% loss of their rewards.
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L119)
-[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L153)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L119)
+
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L153)
 ### Description
 After users have staked their tokens, the owner of the BoostAggregator can set protocolFee to 10 000 (100%) and steal of the users rewards. Anyone can create their own BoostAggregator and it is supposed to be publicly used, therefore the owner of it cannot be considered trusted. Allowing the owner to steal users' rewards is an unnecessary vulnerability.
 ```solidity
@@ -732,7 +747,7 @@ Low
 ### Impact
 Adversary can grief innocent users using the BoostAggregator
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L79-#L92)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L79-#L92)
 ### Description
 ```solidity
     function onERC721Received(address, address from, uint256 tokenId, bytes calldata)
@@ -769,9 +784,11 @@ Low
 ### Impact
 Adversary can prevent innocent users from withdrawing their NFT
 ### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L466-#L473)
-[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L355)
-[link3](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L243)
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L466-#L473)
+
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L355)
+
+[code snippet](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L243)
 ### Description
 In order to withdraw their NFTs from the `UniswapV3Staker`, users have to first unstake their token and then call `withdrawToken()`. The problem is that in the meantime adversary can call `stakeToken()` with the innocent user's token ID, forcing the `withdrawToken()` to fail. Adversary can purposefully back-run the user's `unstakeToken()` tx and stuck their NFT, as well as gas grief them. Considering most users will be EOAs, this would be a problem for the majority of them.
 The solution would be to use a private RPC to send the transactions, but this has 3 major flaws:
