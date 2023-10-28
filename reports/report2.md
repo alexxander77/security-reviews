@@ -521,12 +521,36 @@ A well known problem is when users decide to approve a given contract to spend a
 
 ### Recommendation
 Using a Timelock could solve the listed problems.
-## <a id="my-section3"></a> 3.
+
+## <a id="my-section3"></a> 3. Incorrect protocol fee is taken when changing NFTs
 ### Severity
+Medium
 ### Impact
+Incorrect protocol fee is taken when changing NFTs which results in profit loss for the Caviar protocol.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-04-caviar/blob/main/src/PrivatePool.sol#L737)
 ### Description
+The protocol fee in `changeFeeQuote` is calculated as a percentage of the `feeAmount` which is based on the input amount:
+```solidity
+function changeFeeQuote(uint256 inputAmount) public view returns (uint256 feeAmount, uint256 protocolFeeAmount) {
+    ...
+    protocolFeeAmount = feeAmount * Factory(factory).protocolFeeRate() / 10_000;
+```
+This seems wrong as in `buyQuote` and `sellQuote` the protocol fee is calculated as a percentage of the input amount, not the pool fee amount:
+```solidity
+function buyQuote(uint256 outputAmount)
+    ...
+    protocolFeeAmount = inputAmount * Factory(factory).protocolFeeRate() / 10_000;
+```
+```solidity
+function sellQuote(uint256 inputAmount)
+    ...
+    protocolFeeAmount = outputAmount * Factory(factory).protocolFeeRate() / 10_000;
+```
+This makes the protocol fee extremely low meaning a profit loss for the protocol.
+
 ### Recommendation
+`protocolFeeAmount` in `changeFeeQuote` should be a percentage of the input amount instead of the pool fee.
 
 ## <a id="my-section4"></a> 4.
 ### Severity
