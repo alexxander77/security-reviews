@@ -640,12 +640,30 @@ User’s ETH is not refunded and stuck in RootBridgeAgent.
 ### Recommendation
 Either revert `retrySettlement(...)` when called on a redeemed & non-existent settlements, or accumulate the msg.value in `accumulatedRewards`.
 
-## 6. <a id="my-section6"></a>
+## 6. <a id="my-section6"></a> UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument
 ### Severity
+Medium
 ### Impact
+Restaking will not work as expected. People using BoostAggregator will have to unstake, withdraw, deposit again in order to restake their token.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L342)
+[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L374)
 ### Description
+```solidity
+    function restakeToken(uint256 tokenId) external {
+        IncentiveKey storage incentiveId = stakedIncentiveKey[tokenId];
+        if (incentiveId.startTime != 0) _unstakeToken(incentiveId, tokenId, true);  // @audit - boolean passed should be false, instead of true
+
+        (IUniswapV3Pool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) =
+            NFTPositionInfo.getPositionInfo(factory, nonfungiblePositionManager, tokenId);
+
+        _stakeToken(tokenId, pool, tickLower, tickUpper, liquidity);
+    }
+```
+`_unstakeToken` receives a boolean argument `isNotRestake` with the idea that if an incentive has ended, adversary can call restake on any token and stake it into the next incentive. The problem is that `restakeToken` passes `true` instead of `false` and corrupts the logic. Because of this, any users using BoostAggregator will have to unstake and withdraw their tokens and redeposit them into the UniswapV3Staker via the BoostAggregator, which is not only inconvenient, but also costs a lot of gas.
+
 ### Recommendation
+pass false as an argument in #L342
 
 ## 7. <a id="my-section7"></a>
 ### Severity
@@ -654,3 +672,23 @@ Either revert `retrySettlement(...)` when called on a redeemed & non-existent se
 ### Description
 ### Recommendation
 
+## 8. <a id="my-section8"></a>
+### Severity
+### Impact
+### Vulnerable Code
+### Description
+### Recommendation
+
+## 9. <a id="my-section9"></a>
+### Severity
+### Impact
+### Vulnerable Code
+### Description
+### Recommendation
+
+## 10. <a id="my-section10"></a>
+### Severity
+### Impact
+### Vulnerable Code
+### Description
+### Recommendation
