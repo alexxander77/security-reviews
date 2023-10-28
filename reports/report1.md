@@ -25,9 +25,8 @@ The audit primaraly focused on veryfiying and securing -
 | [[6]](#my-section6) | UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument                                                 | Medium   | Fixed |
 | [[7]](#my-section7) | BoostAggregator loss of funds for low-value rewards                                                                           | Medium   | Fixed |
 | [[8]](#my-section8) | BoostAggregator owner can set fees to 100% and steal all of the users rewards                                                 | Medium   | Fixed |
-| [[9]](#my-section9) | Deprecating a gauge before `queueRewardsForCycle()` in a new cycle leads to loss of rewards                                   | Medium   | Acknowledged |
-| [[10]](#my-section10) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                             | Low      | Fixed |
-| [[11]](#my-section11) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
+| [[9]](#my-section9) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                             | Low      | Fixed |
+| [[10]](#my-section10) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
 
 # Detailed Explanation
 
@@ -727,14 +726,7 @@ After users have staked their tokens, the owner of the BoostAggregator can set p
 ### Recommendation
 Create a mapping which tracks the `protocolFee` at which the user has deposited their NFT, upon withdrawing get the protocolFee from the said mapping.
 
-## 9. <a id="my-section9"></a>
-### Severity
-### Impact
-### Vulnerable Code
-### Description
-### Recommendation
-
-## 10. <a id="my-section10"></a> Adversary can grief wrongfully sent NFTs to BoostAggregator.sol
+## 9. <a id="my-section9"></a> Adversary can grief wrongfully sent NFTs to BoostAggregator.sol
 ### Severity
 Low
 ### Impact
@@ -771,9 +763,30 @@ add the following line:
 require(msg.sender == from)
 ```
 
-## 11. <a id="my-section11"></a>
+## 10. <a id="my-section10"></a> Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker
 ### Severity
+Low
 ### Impact
+Adversary can prevent innocent users from withdrawing their NFT
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L466-#L473)
+[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L355)
+[link3](https://github.com/code-423n4/2023-05-maia/blob/main/src/uni-v3-staker/UniswapV3Staker.sol#L243)
 ### Description
+In order to withdraw their NFTs from the `UniswapV3Staker`, users have to first unstake their token and then call `withdrawToken()`. The problem is that in the meantime adversary can call `stakeToken()` with the innocent user's token ID, forcing the `withdrawToken()` to fail. Adversary can purposefully back-run the user's `unstakeToken()` tx and stuck their NFT, as well as gas grief them. Considering most users will be EOAs, this would be a problem for the majority of them.
+The solution would be to use a private RPC to send the transactions, but this has 3 major flaws:
+* It is costly (loss of funds for the user)
+* Not all L2s have a private RPC which anyone can use
+* Forcing ordinary users to use private RPCs to execute their transactions is an overall huge drawback, as most users aren't familiar with it.
+```solidity
+    function stakeToken(uint256 tokenId) external override {   // @audit - lack of access control
+        if (deposits[tokenId].stakedTimestamp != 0) revert TokenStakedError();
+
+        (IUniswapV3Pool pool, int24 tickLower, int24 tickUpper, uint128 liquidity) =
+            NFTPositionInfo.getPositionInfo(factory, nonfungiblePositionManager, tokenId);
+
+        _stakeToken(tokenId, pool, tickLower, tickUpper, liquidity);
+    }
+```
 ### Recommendation
+Add a `unstakeAndWithdraw` function
