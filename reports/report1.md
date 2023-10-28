@@ -392,8 +392,17 @@ function helper_gauge_state() public view {
 ### Recommendation
 When a new cycle starts make sure gaguges are re-added after rewards are queued in a cycle.
 
+## 3. <a id="my-section3"></a> Attacker can steal Accumulated Awards from RootBridgeAgent by abusing retrySettlement()
 ### Severity
 ### Impact
 ### Vulnerable Code
 ### Description
 ### Recommendation
+
+## 4. <a id="my-section4"></a>
+### Severity
+### Impact
+### Vulnerable Code
+### Description
+### Recommendation
+
