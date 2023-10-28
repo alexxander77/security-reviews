@@ -628,7 +628,26 @@ function testSweep() public {
 ### Recommendation
 Convert WETH to ETH in `sweep()`.
 
-## 5. <a id="my-section5"></a>
+## 5. <a id="my-section5"></a> `retrySettlement()` should revert on a Settlement that has been redeemed or is non existing, crediting back ETH to user
+### Severity
+Medium
+### Impact
+User’s ETH is not refunded and stuck in RootBridgeAgent.
+### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/54a45beb1428d85999da3f721f923cbf36ee3d35/src/ulysses-omnichain/RootBridgeAgent.sol#L244-L252)
+### Description
+`retrySettlement(...)` is a payable function inside RootBridgeAgent that accepts ETH as payment for gas & re-trying execution of a Settlement. The following block of code highlights the check that is used to verify if the Settlement doesn’t exist or hasn’t been redeemed. The problem is that the function returns false rather to revert which means that a user that called `retrySettlement(...)` for redeemed or non-existent settlement won’t get their ETH back, moreover, the ETH is not accounted in `accumulatedRewards` and will be stuck in the contract.
+### Recommendation
+Either revert `retrySettlement(...)` when called on a redeemed & non-existent settlements, or accumulate the msg.value in `accumulatedRewards`.
+
+## 6. <a id="my-section6"></a>
+### Severity
+### Impact
+### Vulnerable Code
+### Description
+### Recommendation
+
+## 7. <a id="my-section7"></a>
 ### Severity
 ### Impact
 ### Vulnerable Code
