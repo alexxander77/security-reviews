@@ -13,15 +13,15 @@ Caviar Private Pools are highly customizable NFT AMM pool implementing concentra
 The audit focused on veryfiying and securing all of the contracts in the system. 
 
 # Findings List
-| # | Issue Title                                                                            | Severity | Status |
-| ------ | ----------------------------------------------------------------- | --------------| ------------------|
-| [[1]](#my-section1) | Royalty receiver can drain a private pool                            | High     | Fixed |
-| [[2]](#my-section2) | PrivatePool owner can steal tokens approved to the pair              | High     | Fixed |
-| [[3]](#my-section3) | Incorrect protocol fee is taken when changing NFTs                   | Medium   | Fixed |
-| [[4]](#my-section4) | Incorrect NFT sale price calculation                                 | Medium   | Fixed |
-| [[5]](#my-section5) | Non-standard ERC20 tokens such as USDT are not supported             | Medium   | Fixed |
-| [[6]](#my-section6) | Malicious royalty recipient can steal excess eth from buy orders     | Medium   | Fixed |
-| [[7]](#my-section7) | change(...) in EthRouter.sol won't work with multiple Change orders  | Medium   | Fixed |
+| # | Issue Title                                                                                | Severity | Status |
+| ------ | ----------------------------------------------------------------- | --------------    | ------------------|
+| [[1]](#my-section1) | Royalty receiver can drain a private pool                                | High     | Fixed  |
+| [[2]](#my-section2) | PrivatePool owner can steal tokens approved to the pair                  | High     | Fixed  |
+| [[3]](#my-section3) | Incorrect protocol fee is taken when changing NFTs                       | Medium   | Fixed  |
+| [[4]](#my-section4) | Incorrect NFT sale price calculation                                     | Medium   | Fixed  |
+| [[5]](#my-section5) | Non-standard ERC20 tokens such as USDT are not supported                 | Medium   | Fixed  |
+| [[6]](#my-section6) | Malicious royalty recipient can steal excess eth from buy orders         | Medium   | Fixed  |
+| [[7]](#my-section7) | `change(...)` in `EthRouter.sol` won't work with multiple Change orders  | Medium   | Fixed  |
 
 # Detailed Explanation
 
@@ -1030,9 +1030,101 @@ contract RoyaltyReceiverStealExcessEthTest is Fixture {
 ### Recommendation
 Rework buy in `EthRouter.sol` and `PrivatePool.sol`. Use reentrancy guard.
 
-## <a id="my-section7"></a> 7.
+## <a id="my-section7"></a> 7. `change(...)` in `EthRouter.sol` won't work with multiple Change orders
 ### Severity
+Medium
 ### Impact
+A user that submits a `change(...)` with more than 1 `Change` order will revert.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-04-caviar/blob/cd8a92667bcb6657f70657183769c244d04c015c/src/EthRouter.sol#L254-L293)
 ### Description
+`change(...)` in EthRouter.sol calls `change(...)` in the Private Pool in the following code block:
+```solidity
+PrivatePool(_change.pool).change{value: msg.value}(
+	_change.inputTokenIds,
+	_change.inputTokenWeights,
+	_change.inputProof,
+	_change.stolenNftProofs,
+	_change.outputTokenIds,
+	_change.outputTokenWeights,
+	_change.outputProof
+);
+```
+The issue is that `msg.value` is passed as the value that would be used to fund the accrued fees in the Private Pool as the result of using change.
+```solidity
+(feeAmount, protocolFeeAmount) = changeFeeQuote(inputWeightSum);
+```
+After the fees are substracted from the received msg.value, the excess is returned back to `EthRouter.sol`
+```solidity
+// refund any excess ETH to the caller
+if (msg.value > feeAmount + protocolFeeAmount) {
+	msg.sender.safeTransferETH(msg.value - feeAmount - protocolFeeAmount);
+}
+```
+However, now the next `Change` order in `Change[] calldata changes` will be passed to the private pool again with `msg.value` but the balance of `EthRouter.sol` is actually less than `msg.value` since we were charged a fee in the PrivatePool for the previous Change order - this will cause a revert because now `msg.value > EthRouter.sol balance`.
+### Coded POC
+Below is a modified `test_RefundsSurplusEth() {...}` in `Change.t.sol` - the test originally changes users NFTs with ids #5-#9 for the Private Pool NFTs with ids #0-#4 - now the test submits a second `Change` in the `EthRouter.Change[] memory changes` array that swaps back the users NFTs with (now) ids #0-#4 for the Private Pool NFTs with (now) ids #5-#9. The function reverts with `OutOfFund` error.
+```solidity
+function  test_RefundsSurplusEth() public {
+
+	uint256[] memory inputTokenIds = new  uint256[](5);
+	uint256[] memory inputTokenWeights = new  uint256[](0);
+	uint256[] memory outputTokenIds = new  uint256[](5);
+	uint256[] memory outputTokenWeights = new  uint256[](0);
+
+	for (uint256 i = 0; i < 5; i++) {
+		inputTokenIds[i] = i + 5;
+		outputTokenIds[i] = i;
+	}
+	
+	// Token Ids for the 2nd Change order
+	uint256[] memory new_inputTokenIds = new  uint256[](5);
+	uint256[] memory new_inputTokenWeights = new  uint256[](0);
+	uint256[] memory new_outputTokenIds = new  uint256[](5);
+	uint256[] memory new_outputTokenWeights = new  uint256[](0);
+	
+	// Populate the Token Ids - user now has #0-#4 and pool has #5-#9
+	for (uint256 i = 0; i < 5; i++) {
+		new_inputTokenIds[i] = i;
+		new_outputTokenIds[i] = i + 5;
+	}
+
+	EthRouter.Change[] memory changes = new EthRouter.Change[](2);
+	changes[0] = EthRouter.Change({
+		pool: payable(address(privatePool)),
+		nft: address(milady),
+		inputTokenIds: inputTokenIds,
+		inputTokenWeights: inputTokenWeights,
+		inputProof: PrivatePool.MerkleMultiProof(new  bytes32[](0), new  bool[](0)),
+		stolenNftProofs: new IStolenNftOracle.Message[](0),
+		outputTokenIds: outputTokenIds,
+		outputTokenWeights: outputTokenWeights,
+		outputProof: PrivatePool.MerkleMultiProof(new  bytes32[](0), new  bool[](0))
+	});
+	// Create 2nd Change order
+	changes[1] = EthRouter.Change({
+		pool: payable(address(privatePool)),
+		nft: address(milady),
+		inputTokenIds: new_inputTokenIds,
+		inputTokenWeights: new_inputTokenWeights,
+		inputProof: PrivatePool.MerkleMultiProof(new  bytes32[](0), new  bool[](0)),
+		stolenNftProofs: new IStolenNftOracle.Message[](0),
+		outputTokenIds: new_outputTokenIds,
+		outputTokenWeights: new_outputTokenWeights,
+		outputProof: PrivatePool.MerkleMultiProof(new  bytes32[](0), new  bool[](0))
+	});
+	
+	(uint256 changeFee,) = privatePool.changeFeeQuote(inputTokenIds.length * 1e18);
+	
+	uint256 balanceBefore = address(this).balance;
+	
+	// act
+	ethRouter.change{value: 2*changeFee + 1000}(changes, 0);
+	
+	// assert
+	assertEq(balanceBefore - address(this).balance, changeFee, "Should have refunded surplus eth");
+
+}
+```
 ### Recommendation
+Keep track of the available balance in `change(...)` in `EthRouter.sol` and update it accordingly.
