@@ -24,7 +24,7 @@ The audit primaraly focused on veryfiying and securing -
 | [[5]](#my-section5) | `retrySettlement()` should revert on a Settlement that has been redeemed or is non existing, crediting back ETH to user       | Medium   | Fixed |
 | [[6]](#my-section6) | UniV3 Staker `restakeToken(...)` calls unstakeToken(...)` with wrong argument                                                 | Medium   | Fixed |
 | [[7]](#my-section7) | BoostAggregator loss of funds for low-value rewards                                                                           | Medium   | Fixed |
-| [[8]](#my-section8) | BoostAggregator owner can set fees to 100% and steal all of the users' rewards                                                | Medium   | Fixed |
+| [[8]](#my-section8) | BoostAggregator owner can set fees to 100% and steal all of the users rewards                                                 | Medium   | Fixed |
 | [[9]](#my-section9) | Deprecating a gauge before `queueRewardsForCycle()` in a new cycle leads to loss of rewards                                   | Medium   | Acknowledged |
 | [[10]](#my-section10) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                             | Low      | Fixed |
 | [[11]](#my-section11) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
@@ -707,12 +707,25 @@ This would especially be a problem when a user has numerous low-value NFTs/ has 
 ```
 ### Recommendation
 Still distribute the rewards, even if they're `< DIVISIONER`
-## 8. <a id="my-section8"></a>
+
+## 8. <a id="my-section8"></a> BoostAggregator owner can set fees to 100% and steal all of the users rewards       
 ### Severity
+Medium
 ### Impact
+Users who use BoostAggregator will suffer 100% loss of their rewards.
 ### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L119)
+[link2](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L153)
 ### Description
+After users have staked their tokens, the owner of the BoostAggregator can set protocolFee to 10 000 (100%) and steal of the users rewards. Anyone can create their own BoostAggregator and it is supposed to be publicly used, therefore the owner of it cannot be considered trusted. Allowing the owner to steal users' rewards is an unnecessary vulnerability.
+```solidity
+    function setProtocolFee(uint256 _protocolFee) external onlyOwner { 
+        if (_protocolFee > DIVISIONER) revert FeeTooHigh();
+        protocolFee = _protocolFee; // @audit - owner can set it to 100% and steal all rewards
+    }
+```
 ### Recommendation
+Create a mapping which tracks the `protocolFee` at which the user has deposited their NFT, upon withdrawing get the protocolFee from the said mapping.
 
 ## 9. <a id="my-section9"></a>
 ### Severity
