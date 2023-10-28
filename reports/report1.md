@@ -731,6 +731,9 @@ Create a mapping which tracks the `protocolFee` at which the user has deposited 
 Low
 ### Impact
 Adversary can grief innocent users using the BoostAggregator
+### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L79-#L92)
+### Description
 ```solidity
     function onERC721Received(address, address from, uint256 tokenId, bytes calldata)
         external
@@ -748,9 +751,6 @@ Adversary can grief innocent users using the BoostAggregator
         return this.onERC721Received.selector;
     }
 ```
-### Vulnerable Code
-[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L79-#L92)
-### Description
 `BoostAggregator#onERC721Received` does not validate `msg.sender` to be `nonfungiblePositionManager` in order to allow for any whitelisted address to retrieve the NFT. However this opens up a flaw in the logic as adversary can grief in the following way:
 
 * User wrongfully sends their NFT in the `BoostAggregator` contract
