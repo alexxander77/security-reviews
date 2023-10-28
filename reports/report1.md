@@ -734,7 +734,44 @@ Create a mapping which tracks the `protocolFee` at which the user has deposited 
 ### Description
 ### Recommendation
 
-## 10. <a id="my-section10"></a>
+## 10. <a id="my-section10"></a> Adversary can grief wrongfully sent NFTs to BoostAggregator.sol
+### Severity
+Low
+### Impact
+Adversary can grief innocent users using the BoostAggregator
+```solidity
+    function onERC721Received(address, address from, uint256 tokenId, bytes calldata)
+        external
+        override
+        onlyWhitelisted(from)
+        returns (bytes4)
+    {
+        // update tokenIdRewards prior to staking
+        tokenIdRewards[tokenId] = uniswapV3Staker.tokenIdRewards(tokenId);
+        // map tokenId to user
+        tokenIdToUser[tokenId] = from;
+        // stake NFT to Uniswap V3 Staker
+        nonfungiblePositionManager.safeTransferFrom(address(this), address(uniswapV3Staker), tokenId);
+
+        return this.onERC721Received.selector;
+    }
+```
+### Vulnerable Code
+[link1](https://github.com/code-423n4/2023-05-maia/blob/main/src/talos/boost-aggregator/BoostAggregator.sol#L79-#L92)
+### Description
+`BoostAggregator#onERC721Received` does not validate `msg.sender` to be `nonfungiblePositionManager` in order to allow for any whitelisted address to retrieve the NFT. However this opens up a flaw in the logic as adversary can grief in the following way:
+
+* User wrongfully sends their NFT in the `BoostAggregator` contract
+* A griefer sees this before any other whitelisted user and decides to do a grief attack.
+* The griefer calls `BoostAggregator#onERC721Received` passing a random whitelisted address as `from` argument.
+* The token is now staked in a random whitelisted user's name. In order to unstake it and send it to the original user, a lot of gas-costly operations have to happen. Furthermore, it will be quite likely for the whitelisted address to not even know that they're now the staker/ owner of said NFT.
+### Recommendation
+add the following line:
+```solidity
+require(msg.sender == from)
+```
+
+## 11. <a id="my-section11"></a>
 ### Severity
 ### Impact
 ### Vulnerable Code
