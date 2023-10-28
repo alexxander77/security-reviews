@@ -31,7 +31,7 @@ The audit primaraly focused on veryfiying and securing -
 
 # Detailed Explanation
 
-## <a id="my-section"></a> 1. Attacker can mint arbitrary amount of `hToken` on RootChain
+## <a id="my-section1"></a> 1. Attacker can mint arbitrary amount of `hToken` on RootChain
 
 ### Severity
 Critical
