@@ -278,11 +278,69 @@ function testWrongVoiceCreditsToRecipient() public {
 Rework the accounting to such `_allocator.voiceCreditsCastToRecipient[_recipientId] = totalCredits;`
 ### <a id="my-section4"></a> 4. QV strategy missing allocators voiceCredits update
 #### Severity
+Medium
 #### Vulnerable Code
+[code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/qv-simple/QVSimpleStrategy.sol#L107-L124)
 #### Impact
+Allocator can cast infinite amount of voice credits
 #### Description
-#### Recommendation
+In `QVSimpleStrategy.sol` `allocate()` has a condition that checks if the allocator won't surpass `maxVoiceCreditsPerAllocator`, however, `allocator.voiceCredits` is never updated throughout the `allocate()` function which makes `maxVoiceCreditsPerAllocator` meaningless and allows for infinite allocation of voice credits.
+```solidity
+if (!_hasVoiceCreditsLeft(voiceCreditsToAllocate, allocator.voiceCredits)) revert INVALID();
+```
+#### Coded POC
+* Add the following getter function to QVBaseStrategy.sol
+```solidity
+function getAllocatorVoiceCredits(address allocator) external returns(uint256) {
+        return allocators[allocator].voiceCredits;
+    }
+```
+* Add the following test function in `QVSimpleStrategy.t.sol`
+* Execute with `forge test --match-test testWrongTotalVoiceCredits -vv`
 
+Output - 0 `voiceCredits` in the allocator struct state, although he has allocated
+```solidity
+function testWrongTotalVoiceCredits() public {
+
+        address recipientId = __register_accept_recipient();
+
+        vm.warp(registrationEndTime + 10);
+
+        address[] memory recipientIds = new address[](1);
+        recipientIds[0] = recipientId;
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 9.9e17; // fund amount: 1e18 - fee: 1e17 = 9.9e17
+
+        token.mint(pool_manager1(), 100e18);
+        // set the allowance for the transfer
+        vm.prank(pool_manager1());
+        token.approve(address(allo()), 999999999e18);
+
+        // fund pool
+        vm.prank(pool_manager1());
+        allo().fundPool(poolId, 1e18);
+
+        vm.warp(allocationStartTime + 10);
+
+        address allocator = randomAddress();
+        vm.startPrank(pool_manager1());
+        qvSimpleStrategy().addAllocator(allocator);
+        bytes memory allocateData = __generateAllocation(recipientId, 10);
+
+        vm.startPrank(address(allo()));
+        qvSimpleStrategy().allocate(allocateData, randomAddress());
+
+        console.log("Total vocie credits", qvSimpleStrategy().getAllocatorVoiceCredits(randomAddress()));
+        
+        
+
+        vm.warp(allocationEndTime + 10);
+
+    }
+```
+#### Recommendation
+Update voiceCredits inside the Allocator struct
 ### <a id="my-section5"></a> 5. RFP strategy reverts when there is more than 1 milestone 
 #### Severity
 #### Vulnerable Code
