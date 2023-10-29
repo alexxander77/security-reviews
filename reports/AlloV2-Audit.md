@@ -341,13 +341,80 @@ function testWrongTotalVoiceCredits() public {
 ```
 #### Recommendation
 Update voiceCredits inside the Allocator struct
+
 ### <a id="my-section5"></a> 5. RFP strategy reverts when there is more than 1 milestone 
 #### Severity
+Medium
 #### Vulnerable Code
+[code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/rfp-simple/RFPSimpleStrategy.sol#L382-L412)
 #### Impact
+The current logic in `_distribute()` inside `RFPSimpleStrategy.sol` will render the strategy useless when there are more than 1 milestones.
 #### Description
-#### Recommendation
+The `_distribute()` function checks that the `proposalBid` doesn't exceed `poolAmount` and then subtracts the current milestone amount from `poolAmount`, however `proposalBid` is always constant and at some point `poolAmount` will be less than `proposalBid` and the function will revert and unable future milestones to be executed.
+```solidity
+// make sure has enough funds to distribute based on the proposal bid
+if (recipient.proposalBid > poolAmount) revert NOT_ENOUGH_FUNDS();
+```
+#### Coded POC
+* Add `testTwoMilestones` and the modified `__register_recipient()` to RFPSimpleStrategy.t.sol
+* In this scenario we have `maxBid = 4.95e18`, pool with 5e18 funds, milestones worth 7e17 & 3e17 and an accepted proposal bid of 3e18
+* Execute the test with `forge test --match-test testTwoMilestones -vv`
 
+Output - the function reverts on trying to distribute the second milestone with `NOT_ENOUGH_FUNDS()` revert message.
+```solidity
+function testTwoMilestones() public {
+       uint newMaxBid = 4950000000000000000;
+
+       vm.prank(pool_admin());
+       strategy.increaseMaxBid(newMaxBid);
+
+       address funder = address(77);
+       vm.deal(funder, 5e18);
+       vm.prank(funder);
+       allo().fundPool{value: 5e18}(poolId, 5e18);
+       console.log("Strategy Balance", address(strategy).balance);
+
+       address recId = __register_recipient();
+       console.log("Id", recId);
+
+       __setMilestones();
+
+       // _helperPrintMilestone(strategy.getMilestone(0));
+
+       vm.prank(address(allo()));
+       strategy.allocate(abi.encode(recId), address(pool_admin()));
+
+       console.log("Accepted Recipient Id: ", strategy.acceptedRecipientId());
+
+       vm.prank(recipient());
+       strategy.submitUpcomingMilestone(Metadata({protocol: 1, pointer: "metadata"}));
+
+       vm.prank(address(allo()));
+       strategy.distribute(new address[](0), "", pool_admin());   
+       
+       console.log("Strategy Balance", address(strategy).balance);
+
+       vm.prank(recipient());
+       strategy.submitUpcomingMilestone(Metadata({protocol: 1, pointer: "metadata"}));
+
+       vm.prank(address(allo()));
+       strategy.distribute(new address[](0), "", pool_admin());   
+       
+       console.log("Strategy Balance", address(strategy).balance);
+
+   }
+
+   function __register_recipient() internal returns (address recipientId) {
+       address sender = recipient();
+       Metadata memory metadata = Metadata({protocol: 1, pointer: "metadata"});
+
+       bytes memory data = abi.encode(recipientAddress(), false, 3e18, metadata);
+       vm.prank(address(allo()));
+       recipientId = strategy.registerRecipient(data, sender);
+   }
+```
+#### Recommendation
+Rework `_distribute`
 ### <a id="my-section6"></a> 6. RFP strategy register always reverts if using registry Anchor 
 #### Severity
 #### Vulnerable Code
