@@ -164,42 +164,141 @@ function _checkOnlyAfterAllocation() internal view virtual {
 ```
 ### <a id="my-section2"></a> 2. QV Strategy has no receive() function
 #### Severity
-#### Ipact
+Medium
 #### Vulnerable Code
+[code snippet 1](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/qv-base/QVBaseStrategy.sol#L30C1-L575C2)
+
+[code snippet 2](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/main/allo-v2/contracts/strategies/qv-simple/QVSimpleStrategy.sol)
+#### Impact
+The QV strategy Base and Simple contracts don't implement a receive() function, strategy is nonfunctional with Native token.
 #### Description
+When creating a pool `_fundPool()` is invoked to credit the percent fee to Allo and to credit the remaining funds to the underlying strategy. The issue is that `QVBaseStrategy` & `QVSimpleStrategy` don't implement a `receive()` function and therefore these strategies become unusable with the Native token ( for example `RFPSimpleStrategy` does implement a `receive()` ).
+```solidity
+function _fundPool(uint256 _amount, uint256 _poolId, IStrategy _strategy) internal {
+        // code ... 
+        _transferAmountFrom(_token, TransferData({from: msg.sender, to: address(_strategy), amount: amountAfterFee}));
+        _strategy.increasePoolAmount(amountAfterFee);
+
+        emit PoolFunded(_poolId, amountAfterFee, feeAmount);
+    }
+```
 #### Recommendation
+Implement a `receive()` function
 
 ### <a id="my-section3"></a> 3. QV strategy wrong voiceCreditsCastToRecipient update calculations
 #### Severity
-#### Ipact
+Medium
 #### Vulnerable Code
+[code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/qv-base/QVBaseStrategy.sol#L506-L534)
+#### Impact
+This will lead to an inflated `_recipient.totalVotesReceived` and will cause wrong vote accounting for any subsequent `allocate()` executions
 #### Description
-#### Recommendation
+In `_qv_allocate(..., uint256 voiceCreditsToAllocate, ...)` the variable `totalCredits = voiceCreditsToAllocate + creditsCastToRecipient` is the sum of the already delegated voice credits to the recipient and the new voice credits to be further allocated. The issue is that later in the function we have `_allocator.voiceCreditsCastToRecipient[_recipientId] += totalCredits;` which increments the allocators casted credits with his new and old casted voice credits (rather only with the new).
+```solidity
+function _qv_allocate(
+        Allocator storage _allocator,
+        Recipient storage _recipient,
+        address _recipientId,
+        uint256 _voiceCreditsToAllocate,
+        address _sender
+    ) internal onlyActiveAllocation {
+        // check the `_voiceCreditsToAllocate` is > 0
+        if (_voiceCreditsToAllocate == 0) revert INVALID();
 
+        // get the previous values
+        uint256 creditsCastToRecipient = _allocator.voiceCreditsCastToRecipient[_recipientId];
+        uint256 votesCastToRecipient = _allocator.votesCastToRecipient[_recipientId];
+
+        // get the total credits and calculate the vote result
+        uint256 totalCredits = _voiceCreditsToAllocate + creditsCastToRecipient;
+        // code ...
+
+        // @audit wrong, should be += voiceCreditsToAllocate
+        _allocator.voiceCreditsCastToRecipient[_recipientId] += totalCredits;
+
+        // more code ...
+    }
+```
+#### Coded POC
+* Add the following getter function to `QVBaseStrategy.sol`
+```solidity
+function getAllocatorVoiceCreditsCastToRecipient(address allocator, address recipient) external returns(uint256) {
+        return allocators[allocator].voiceCreditsCastToRecipient[recipient];
+    }
+```
+* Add the following test function in `QVSimpleStrategy.t.sol`
+* Execute with `forge test --match-test testWrongVoiceCreditsToRecipient -vv`
+Output - the voice credits that are cast are 30 instead of 20
+```solidity
+function testWrongVoiceCreditsToRecipient() public {
+        
+        // register recipient
+        address recipientId = __register_accept_recipient();
+
+        vm.warp(registrationEndTime + 10);
+
+        address[] memory recipientIds = new address[](1);
+        recipientIds[0] = recipientId;
+
+        // fund pool
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 9.9e17; // fund amount: 1e18 - fee: 1e17 = 9.9e17
+
+        token.mint(pool_manager1(), 100e18);
+        // set the allowance for the transfer
+        vm.prank(pool_manager1());
+        token.approve(address(allo()), 999999999e18);
+
+        vm.prank(pool_manager1());
+        allo().fundPool(poolId, 1e18);
+
+        vm.warp(allocationStartTime + 10);
+
+        address allocator = randomAddress();
+        vm.startPrank(pool_manager1());
+        qvSimpleStrategy().addAllocator(allocator);
+        bytes memory allocateData = __generateAllocation(recipientId, 10);
+
+        // allocate 10 credits
+        vm.startPrank(address(allo()));
+        qvSimpleStrategy().allocate(allocateData, randomAddress());
+
+        console.log("Voice Credits Cast To After 1st allocate()", qvSimpleStrategy().getAllocatorVoiceCreditsCastToRecipient(randomAddress(), recipientId));
+        
+        // allocate 10 more credits, however allocator now has credited a wrong 30 credits to the recipient
+        vm.startPrank(address(allo()));
+        qvSimpleStrategy().allocate(allocateData, randomAddress());
+
+        console.log("Voice Credits Cast To After 2st allocate()", qvSimpleStrategy().getAllocatorVoiceCreditsCastToRecipient(randomAddress(), recipientId));
+
+    }
+```
+#### Recommendation
+Rework the accounting to such `_allocator.voiceCreditsCastToRecipient[_recipientId] = totalCredits;`
 ### <a id="my-section4"></a> 4. QV strategy missing allocators voiceCredits update
 #### Severity
-#### Ipact
 #### Vulnerable Code
+#### Impact
 #### Description
 #### Recommendation
 
 ### <a id="my-section5"></a> 5. RFP strategy reverts when there is more than 1 milestone 
 #### Severity
-#### Ipact
 #### Vulnerable Code
+#### Impact
 #### Description
 #### Recommendation
 
 ### <a id="my-section6"></a> 6. RFP strategy register always reverts if using registry Anchor 
 #### Severity
-#### Ipact
 #### Vulnerable Code
+#### Impact
 #### Description
 #### Recommendation
 
 ### <a id="my-section7"></a> 7. Allo pool funding can avoid paying percent fee 
 #### Severity
-#### Ipact
 #### Vulnerable Code
+#### Impact
 #### Description
 #### Recommendation
