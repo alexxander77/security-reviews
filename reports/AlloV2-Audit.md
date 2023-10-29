@@ -183,7 +183,7 @@ function _fundPool(uint256 _amount, uint256 _poolId, IStrategy _strategy) intern
     }
 ```
 #### Recommendation
-Implement a `receive()` function
+Implement a `receive()` function.
 
 ### <a id="my-section3"></a> 3. QV strategy wrong `voiceCreditsCastToRecipient` update calculations
 #### Severity
@@ -414,14 +414,62 @@ function testTwoMilestones() public {
    }
 ```
 #### Recommendation
-Rework `_distribute`
+Rework `_distribute`.
+
 ### <a id="my-section6"></a> 6. RFP strategy register always reverts if using registry Anchor 
 #### Severity
+Medium
 #### Vulnerable Code
+[code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/rfp-simple/RFPSimpleStrategy.sol#L314-L379)
 #### Impact
+If `RFPSimpleStrategy.sol` has `useRegistryAnchor=true` `_registerRecipient()` will always revert.
 #### Description
-#### Recommendation
+In `_registerRecipient()` the address `recipientAddress`; variable is declared, however, if `useRegistryAnchor=true` the corresponding block of code doesn't assign any value to `recipientAddress` and later in the function the if-statement that checks if `recipientAddress==0` will revert the whole register thus disabling recipients from ever registering.
+```solidity
+function _registerRecipient(bytes memory _data, address _sender)
+        internal
+        override
+        onlyActivePool
+        returns (address recipientId)
+    {
+        bool isUsingRegistryAnchor;
+        address recipientAddress;
+        address registryAnchor;
+        uint256 proposalBid;
+        Metadata memory metadata;
 
+        // Decode '_data' depending on the 'useRegistryAnchor' flag
+        if (useRegistryAnchor) {
+            /// @custom:data when 'true' -> (address recipientId, uint256 proposalBid, Metadata metadata)
+            (recipientId, proposalBid, metadata) = abi.decode(_data, (address, uint256, Metadata));
+
+            // If the sender is not a profile member this will revert
+            if (!_isProfileMember(recipientId, _sender)) revert UNAUTHORIZED();
+        } else {
+            // some code ...
+        }
+
+        // Check if the metadata is required and if it is, check if it is valid, otherwise revert
+        if (metadataRequired && (bytes(metadata.pointer).length == 0 || metadata.protocol == 0)) {
+            revert INVALID_METADATA();
+        }
+
+        if (proposalBid > maxBid) {
+            // If the proposal bid is greater than the max bid this will revert
+            revert EXCEEDING_MAX_BID();
+        } else if (proposalBid == 0) {
+            // If the proposal bid is 0, set it to the max bid
+            proposalBid = maxBid;
+        }
+
+        // If the recipient address is the zero address this will revert
+        if (recipientAddress == address(0)) revert RECIPIENT_ERROR(recipientId);
+
+        // more code
+    }
+```
+#### Recommendation
+Rework registering to be similar to the QV strategy implementation register.
 ### <a id="my-section7"></a> 7. Allo pool funding can avoid paying percent fee 
 #### Severity
 #### Vulnerable Code
