@@ -191,7 +191,7 @@ Medium
 #### Vulnerable Code
 [code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/qv-base/QVBaseStrategy.sol#L506-L534)
 #### Impact
-This will lead to an inflated `_recipient.totalVotesReceived` and will cause wrong vote accounting for any subsequent `allocate()` executions
+This will lead to an inflated `_recipient.totalVotesReceived` and will cause wrong vote accounting for any subsequent `allocate()` executions.
 #### Description
 In `_qv_allocate(..., uint256 voiceCreditsToAllocate, ...)` the variable `totalCredits = voiceCreditsToAllocate + creditsCastToRecipient` is the sum of the already delegated voice credits to the recipient and the new voice credits to be further allocated. The issue is that later in the function we have `_allocator.voiceCreditsCastToRecipient[_recipientId] += totalCredits;` which increments the allocators casted credits with his new and old casted voice credits (rather only with the new).
 ```solidity
@@ -282,7 +282,7 @@ Medium
 #### Vulnerable Code
 [code snippet](https://github.com/sherlock-audit/2023-09-Gitcoin-alexxander77/blob/2c27bba814101c02f9d708ac12d73b1e4ea1f9ce/allo-v2/contracts/strategies/qv-simple/QVSimpleStrategy.sol#L107-L124)
 #### Impact
-Allocator can cast infinite amount of voice credits
+Allocator can cast infinite amount of voice credits.
 #### Description
 In `QVSimpleStrategy.sol` `allocate()` has a condition that checks if the allocator won't surpass `maxVoiceCreditsPerAllocator`, however, `allocator.voiceCredits` is never updated throughout the `allocate()` function which makes `maxVoiceCreditsPerAllocator` meaningless and allows for infinite allocation of voice credits.
 ```solidity
@@ -340,7 +340,7 @@ function testWrongTotalVoiceCredits() public {
     }
 ```
 #### Recommendation
-Update voiceCredits inside the Allocator struct
+Update `voiceCredits` inside the Allocator struct.
 
 ### <a id="my-section5"></a> 5. RFP strategy reverts when there is more than 1 milestone 
 #### Severity
