@@ -7,15 +7,15 @@ If you wish to connect with Alex (*alexxander*) reach out at https://twitter.com
 Allo V2 enables users to deploy pools to which Strategies are attached that exercise different governance mechanics over the pool's funding. Pool deployers can opt in to use one of the already developed Strategy contracts by the Allo team or develop custom Strategies.
 
 ## Findings List
-| # | Issue Title                                                                                | Severity | Status |
-| ------ | ----------------------------------------------------------------- | --------------    | ------------------|
-| [[1]](#my-section1) | QV strategy allocate() and distribute() can be called in the same block  | Medium   | Fixed  |
-| [[2]](#my-section2) | QV Strategy has no receive() function                                    | Medium   | Fixed  |
-| [[3]](#my-section3) | QV strategy wrong voiceCreditsCastToRecipient update calculations        | Medium   | Fixed  |
-| [[4]](#my-section4) | QV strategy missing allocators voiceCredits update                       | Medium   | Fixed  |
-| [[5]](#my-section5) | RFP strategy reverts when there is more than 1 milestone                 | Medium   | Fixed  |
-| [[6]](#my-section6) | RFP strategy register always reverts if using registry Anchor            | Medium   | Fixed  |
-| [[7]](#my-section7) | Allo pool funding can avoid paying percent fee                           | Medium   | Fixed  |
+| #      | Issue Title                                                                               | Severity | Status |
+| ------ | ----------------------------------------------------------------- | ----------------------| ------------------|
+| [[1]](#my-section1) | QV strategy `allocate()` and `distribute()` can be called in the same block  | Medium   | Fixed  |
+| [[2]](#my-section2) | QV Strategy has no `receive()` function                                      | Medium   | Fixed  |
+| [[3]](#my-section3) | QV strategy wrong `voiceCreditsCastToRecipient` update calculations          | Medium   | Fixed  |
+| [[4]](#my-section4) | QV strategy missing allocators `voiceCredits` update                         | Medium   | Fixed  |
+| [[5]](#my-section5) | RFP strategy reverts when there is more than 1 milestone                     | Medium   | Fixed  |
+| [[6]](#my-section6) | RFP strategy register always reverts if using registry Anchor                | Medium   | Fixed  |
+| [[7]](#my-section7) | Allo pool funding can avoid paying percent fee                               | Medium   | Fixed  |
 
 ## Detailed Explanation
 
@@ -185,7 +185,7 @@ function _fundPool(uint256 _amount, uint256 _poolId, IStrategy _strategy) intern
 #### Recommendation
 Implement a `receive()` function
 
-### <a id="my-section3"></a> 3. QV strategy wrong voiceCreditsCastToRecipient update calculations
+### <a id="my-section3"></a> 3. QV strategy wrong `voiceCreditsCastToRecipient` update calculations
 #### Severity
 Medium
 #### Vulnerable Code
@@ -228,6 +228,7 @@ function getAllocatorVoiceCreditsCastToRecipient(address allocator, address reci
 ```
 * Add the following test function in `QVSimpleStrategy.t.sol`
 * Execute with `forge test --match-test testWrongVoiceCreditsToRecipient -vv`
+
 Output - the voice credits that are cast are 30 instead of 20
 ```solidity
 function testWrongVoiceCreditsToRecipient() public {
