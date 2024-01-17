@@ -23,6 +23,8 @@ The audit focused on verifying and securing all of the contracts in the system.
 | [[6]](#my-section6) | Malicious royalty recipient can steal excess eth from buy orders         | Medium   | Fixed  |
 | [[7]](#my-section7) | `change(...)` in `EthRouter.sol` won't work with multiple Change orders  | Medium   | Fixed  |
 
+[Official report](https://code4rena.com/reports/2023-04-caviar)
+
 # Detailed Explanation
 
 ## <a id="my-section1"></a> 1. Royalty receiver can drain a private pool
