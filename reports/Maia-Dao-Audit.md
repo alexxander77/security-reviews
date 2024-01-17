@@ -27,6 +27,7 @@ The audit primarily focused on verifying and securing -
 | [[9]](#my-section9) | Adversary can grief wrongfully sent NFTs to BoostAggregator.sol                                                               | Low      | Fixed |
 | [[10]](#my-section10) | Adversary can restrain users from withdrawing their NFTs from UniswapV3Staker                                               | Low      | Acknowledged |
 
+[Official report](https://code4rena.com/reports/2023-05-maia)
 # Detailed Explanation
 
 ## <a id="my-section1"></a> 1. Attacker can mint arbitrary amount of `hToken` on RootChain
