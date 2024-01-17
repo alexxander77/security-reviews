@@ -330,6 +330,7 @@ function testEmptyInstructionsGrief() public {
     }
 ```
 #### Recommendation
-Rework the accounting to such `_allocator.voiceCreditsCastToRecipient[_recipientId] = totalCredits;`
+If an unsigned bridge is performed (0x02, 0x03 flags) revert the execution on the `RootBridgeAgent` if there are no params instructions for the `MulticallRootRouter`.
+
 
 
