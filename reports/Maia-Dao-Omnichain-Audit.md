@@ -18,6 +18,8 @@ A break down of the positives regarding the refactored code.
 | [[2]](#my-section2) | Dangerous assumption in `MulticallRootRouter` can make redeeming a settlement impossible.        | High     | Fixed  |
 | [[3]](#my-section3) | Not signed deposits to the RootBridgeAgent can be stolen if they miss Router instructions.       | Low      | Fixed  |
 
+[Official report](https://code4rena.com/audits/2023-09-maia-dao-ulysses#top)
+
 ## Detailed Explanation
 ### <a id="my-section1"></a> 1. Virtual Account's `payableCall` lacks access modifier. Virtual Account can be drained.
 #### Severity
