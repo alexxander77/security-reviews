@@ -17,6 +17,7 @@ Allo V2 enables users to deploy pools to which Strategies are attached that exer
 | [[6]](#my-section6) | RFP strategy register always reverts if using registry Anchor                | Medium   | Fixed  |
 | [[7]](#my-section7) | Allo pool funding can avoid paying percent fee                               | Medium   | Fixed  |
 
+[Official report](https://audits.sherlock.xyz/contests/109/report)
 ## Detailed Explanation
 ### <a id="my-section1"></a> 1. QV strategy missing allocators voiceCredits update
 #### Severity
