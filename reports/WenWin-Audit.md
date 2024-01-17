@@ -37,7 +37,7 @@ The culprit for this issue is the implementation of `requestRandomNumberFromSour
         }
     }
 ```
-This is very problematic due to how `try{} catch{}` works & the 63/64 gas rule. If the request to Chainlink VRF fails at any point then execution of the above block will not revert but will continue in the `catch{}` statements only emitting an event and leaving `RNSourceControlle`r in the state `lastRequestFulfilled = false` and triggering the `maxRequestDelay (currently 5 hours)` until `retry()` becomes available to call to retry sending a RN request. This turns out to be dangerous since there is a trivial way of making Chainlink VRF revert - simply not supplying enough gas for the transaction either initially in calling `executeDraw()` or subsequently in `retry()` invocations with the attacker front-running the malicious transaction thus entering the catch block with the left 1/64 gas.
+This is very problematic due to how `try{} catch{}` works & the 63/64 gas rule. If the request to Chainlink VRF fails at any point then execution of the above block will not revert but will continue in the `catch{}` statements only emitting an event and leaving `RNSourceController` in the state `lastRequestFulfilled = false` and triggering the `maxRequestDelay (currently 5 hours)` until `retry()` becomes available to call to retry sending a RN request. This turns out to be dangerous since there is a trivial way of making Chainlink VRF revert - simply not supplying enough gas for the transaction either initially in calling `executeDraw()` or subsequently in `retry()` invocations with the attacker front-running the malicious transaction thus entering the catch block with the left 1/64 gas.
 
 
 #### Recommendation
