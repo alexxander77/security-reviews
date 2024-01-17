@@ -12,6 +12,7 @@ WenWin is a lottery system based on raffle tickets where once a week winning tic
 | [[1]](#my-section1) | An attacker can leave the protocol in a "drawing" state for extended period of time  | Medium   | Fixed  |
 | [[2]](#my-section2) | Undermining the fairness of the protocol in `swapSource()`                           | Medium   | Fixed  |
 
+[Official report](https://code4rena.com/reports/2023-03-wenwin)
 ## Detailed Explanation
 
 ### <a id="my-section1"></a> 1. An attacker can leave the protocol in a "drawing" state for extended period of time
