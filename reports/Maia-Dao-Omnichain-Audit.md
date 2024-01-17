@@ -251,16 +251,10 @@ function executeWithDeposit(address _router, bytes calldata _payload, uint16 _sr
     }
 ```
 #### Coded POC
-* Add the following getter function to `QVBaseStrategy.sol`
-```solidity
-function getAllocatorVoiceCreditsCastToRecipient(address allocator, address recipient) external returns(uint256) {
-        return allocators[allocator].voiceCreditsCastToRecipient[recipient];
-    }
-```
-* Add the following test function in `QVSimpleStrategy.t.sol`
-* Execute with `forge test --match-test testWrongVoiceCreditsToRecipient -vv`
+1. Place the following test in `RootTest` contract inside `RooTest.t.sol`
+2. Run the test with `forge test --match-test testEmptyInstructionsGrief -vv`
 
-Output - the voice credits that are cast are 30 instead of 20
+Output - logs that an adversary user stole assets from the MulticallRouter that were there because of missing instructions from an innocent user's Bridge Out.
 ```solidity
 function testEmptyInstructionsGrief() public {
         testAddLocalTokenArbitrum();
