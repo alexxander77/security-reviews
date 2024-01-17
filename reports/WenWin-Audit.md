@@ -73,7 +73,7 @@ The `swapSource()` method can be successfully called if 2 important boolean chec
         requestRandomNumberFromSource();
     }
 ```
-The bug resides in the `retry()` method. `maxFailedAttemptsReachedAt` is ONLY updated when `failedAttempts == maxFailedAttempts` - notice again the strict equality - meaning that `maxFailedAttemptsReachedAt` won't be updated if there are more `retry()` invocations after `failedAttempts == maxFailedAttempts`. This means that after the point of time when the last failed `retry()` sets `maxFailedAttemptsReachedAt` and the `maxRequestDelay` time passes - `retry()` and `swapSource()` (in that exact order) can be called simultaneously. This breaks the core assumption that randomness can be requested only once per draw. 
+The bug resides in the `retry()` method. `maxFailedAttemptsReachedAt` is ONLY updated when `failedAttempts == maxFailedAttempts` - notice again the strict equality - meaning that `maxFailedAttemptsReachedAt` won't be updated if there are more `retry()` invocations after `failedAttempts == maxFailedAttempts`. This means that after the point of time when the last failed `retry()` sets `maxFailedAttemptsReachedAt` and the `maxRequestDelay` time passes - `retry()` and `swapSource()` (in that exact order) can be called without a delay inbetween. This breaks the core assumption that randomness can be requested only once per draw. 
 ```solidity
         uint256 failedAttempts = ++failedSequentialAttempts;
         if (failedAttempts == maxFailedAttempts) {
