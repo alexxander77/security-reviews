@@ -119,7 +119,7 @@ function testMissingAccessVA() public {
     }
 ```
 #### Recommendation
-Add access control to `VirtualAccount.payableCall(...)`
+Add access control to `VirtualAccount.payableCall(...)`.
 ### <a id="my-section2"></a> 2. Dangerous assumption in `MulticallRootRouter` can make redeeming a settlement impossible.
 #### Severity
 High
